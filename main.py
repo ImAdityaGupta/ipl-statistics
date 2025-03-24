@@ -1387,7 +1387,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-y", "--years",
         type=str,
-        default="2024",
+        default="",
         help=("Comma-separated list of years to process (e.g., '2024,2023'). "
               "If not provided, all years will be processed.")
     )
