@@ -4,6 +4,7 @@ import os
 import xlsxwriter
 import json
 import re
+import argparse
 
 all_fields = []
 
@@ -1343,7 +1344,7 @@ def extract_match_ids(txt_file_path, years=None):
     return match_ids
 
 
-def main():
+def main(output_file, years):
     try:
         erase_sheet()
     except:
@@ -1351,7 +1352,7 @@ def main():
 
     set_up_fields_json()
 
-    all_games = extract_match_ids("ipl_json/README.txt", years=[2024])
+    all_games = extract_match_ids("ipl_json/README.txt", years=years)
 
     #all_games = [1359523,1359520]
 
@@ -1359,13 +1360,47 @@ def main():
     for game in all_games:
         print(game)
         actually_one_game(str(game))
-    write_to_excel('BallByBall_2024.xlsx')
+    write_to_excel(output_file)
 
-main()
-print(all_dismissals)
-print(all_ids)
-print(all_teams)
+
+# 'BallByBall_2024.xlsx'
+
+# main()
+# print(all_dismissals)
+# print(all_ids)
+# print(all_teams)
 #temp_view()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Process IPL match files and output a color-coded Excel sheet."
+    )
+
+    parser.add_argument(
+        "-o", "--output",
+        type=str,
+        default="BallByBall.xlsx",
+        help="Name of the Excel file to save the output (default: BallByBall.xlsx). Will overwrite if file exists."
+    )
+
+    parser.add_argument(
+        "-y", "--years",
+        type=str,
+        default="2024",
+        help=("Comma-separated list of years to process (e.g., '2024,2023'). "
+              "If not provided, all years will be processed.")
+    )
+
+    args = parser.parse_args()
+
+    # Process the years argument into a list of ints, or use None if empty.
+    if args.years:
+        years = [int(year.strip()) for year in args.years.split(",")]
+    else:
+        years = None
+
+    main(output_file=args.output, years=years)
 
 
 
