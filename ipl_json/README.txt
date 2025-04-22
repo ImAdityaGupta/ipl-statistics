@@ -21,7 +21,15 @@ as IPL). The 4th field is the gender of the players involved in the match. The
 5th field is the id of the match, and the remainder of the line shows the
 teams involved in the match.
 
-
+2025-04-17 - club - IPL - male - 1473470 - Sunrisers Hyderabad vs Mumbai Indians
+2025-04-16 - club - IPL - male - 1473469 - Delhi Capitals vs Rajasthan Royals
+2025-04-15 - club - IPL - male - 1473468 - Punjab Kings vs Kolkata Knight Riders
+2025-04-14 - club - IPL - male - 1473467 - Lucknow Super Giants vs Chennai Super Kings
+2025-04-13 - club - IPL - male - 1473466 - Mumbai Indians vs Delhi Capitals
+2025-04-13 - club - IPL - male - 1473465 - Rajasthan Royals vs Royal Challengers Bengaluru
+2025-04-12 - club - IPL - male - 1473464 - Punjab Kings vs Sunrisers Hyderabad
+2025-04-12 - club - IPL - male - 1473463 - Gujarat Titans vs Lucknow Super Giants
+2025-04-11 - club - IPL - male - 1473462 - Chennai Super Kings vs Kolkata Knight Riders
 2025-04-10 - club - IPL - male - 1473461 - Royal Challengers Bengaluru vs Delhi Capitals
 2025-04-09 - club - IPL - male - 1473460 - Gujarat Titans vs Rajasthan Royals
 2025-04-08 - club - IPL - male - 1473459 - Punjab Kings vs Chennai Super Kings

@@ -1,2 +1,5 @@
-PyYAML
-xlsxwriter
+PyYAML~=6.0
+xlsxwriter~=3.0.1
+
+yaml~=0.2.5
+openpyxl~=3.0.9

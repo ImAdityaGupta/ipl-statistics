@@ -5,6 +5,10 @@ import xlsxwriter
 import json
 import re
 import argparse
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, Font
+from openpyxl.utils import get_column_letter
+from openpyxl.formatting.rule import ColorScaleRule
 
 all_fields = []
 
@@ -1314,7 +1318,80 @@ def write_to_excel(sheet_name):
 
     workbook.close()
 
+def edit_write_to_excel(sheet_name):
 
+
+    if os.path.exists(sheet_name):
+        wb = load_workbook(sheet_name)
+    else:
+        wb = Workbook()
+        # remove the default sheet that openpyxl inserts
+        wb.remove(wb.active)
+
+    ws = wb.create_sheet()  # create a fresh worksheet (let openpyxl auto‑name it)
+
+    # 2. ── Basic styles you used before ─────────────────────────────────────────────
+    center_align = Alignment(horizontal="center", vertical="center")
+
+    # 3. ── Header row ───────────────────────────────────────────────────────────────
+    for col_idx, field in enumerate(all_fields, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=field.name)
+        cell.alignment = center_align
+
+    # 4. ── Gather data and write it ─────────────────────────────────────────────────
+    start_row = 2  # data start row (row 1 is headers)
+    all_stats = read_from_file()
+    all_stats = [all_stats[p] for p in all_stats]  # keep your original ordering
+
+    # keep track of widest string in every column
+    max_widths = [max(5,len(str(f.name))) for f in all_fields]
+
+    for r, player in enumerate(all_stats, start=start_row):
+        for c, field in enumerate(all_fields, start=1):
+            value = getattr(player, field.name)
+            cell = ws.cell(row=r, column=c, value=value)
+            cell.alignment = center_align
+            max_widths[c - 1] = max(max_widths[c - 1], len(str(value)))
+
+    # 5. ── Column widths, default row height, freeze panes, filters ────────────────
+    for c, width in enumerate(max_widths, start=1):
+        ws.column_dimensions[get_column_letter(c)].width = width + 1
+
+    ws.sheet_format.defaultRowHeight = 30
+    last_row = len(all_stats) + 1
+    for r in range(1, last_row + 1):
+        ws.row_dimensions[r].height = 30
+    last_col_letter = get_column_letter(len(all_fields))
+    ws.auto_filter.ref = f"A1:{last_col_letter}{last_row}"
+    ws.freeze_panes = "B2"
+
+    # 6. ── Conditional colour scales  (same colours you used) ──────────────────────
+    for c, field in enumerate(all_fields, start=1):
+        if field.big_equals_good == -1:  # no scale wanted
+            continue
+
+        col_letter = get_column_letter(c)
+        data_range = f"{col_letter}2:{col_letter}{last_row}"
+
+        if field.big_equals_good == 1:  # bigger == better → green high
+            rule = ColorScaleRule(
+                start_type='min', start_color='F8696B',  # red
+                mid_type='percentile', mid_value=50, mid_color='FFEB84',  # yellow
+                end_type='max', end_color='63BE7B'  # green
+            )
+        elif field.big_equals_good == 0:  # smaller == better → green low
+            rule = ColorScaleRule(
+                start_type='min', start_color='63BE7B',  # green
+                mid_type='percentile', mid_value=50, mid_color='FFEB84',  # yellow
+                end_type='max', end_color='F8696B'  # red
+            )
+        else:
+            raise ValueError(f"Unexpected big_equals_good value for field '{field.name}'")
+
+        ws.conditional_formatting.add(data_range, rule)
+
+    # 7. ── Save the workbook (overwrite in place if it existed) ────────────────────
+    wb.save(sheet_name)
 
 
 def extract_match_ids(txt_file_path, years=None):
@@ -1362,6 +1439,20 @@ def main(output_file, years):
         actually_one_game(str(game))
     write_to_excel(output_file)
 
+def each_match_different_sheet(output_file, years):
+    set_up_fields_json()
+    all_games = extract_match_ids("ipl_json/README.txt", years=years)
+    all_games.reverse()
+    for game in all_games:
+        print(game)
+        try:
+            erase_sheet()
+        except:
+            pass
+        actually_one_game(str(game))
+        edit_write_to_excel(output_file)
+
+
 
 # 'BallByBall_2024.xlsx'
 
@@ -1392,6 +1483,14 @@ if __name__ == "__main__":
               "If not provided, all years will be processed.")
     )
 
+    parser.add_argument(
+        "-t", "--type",
+        type=str,
+        default="one_sheet",
+        help=("Whether output should be collated or match-by-match. 'one_sheet' is the default, but 'match_by_match' is supported too."
+              "If not provided, all years will be processed.")
+    )
+
     args = parser.parse_args()
 
     # Process the years argument into a list of ints, or use None if empty.
@@ -1400,7 +1499,12 @@ if __name__ == "__main__":
     else:
         years = None
 
-    main(output_file=args.output, years=years)
+    if args.type == "one_sheet":
+        main(output_file=args.output, years=years)
+    elif args.type == "match_by_match":
+        each_match_different_sheet(output_file=args.output, years=years)
+    else:
+        raise ValueError("Not one_sheet or match_by_match. Unsupported.")
 
 
 
